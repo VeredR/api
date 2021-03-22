@@ -104,7 +104,7 @@ As a response returns HTTP 200
 @app.route('/impression', methods=['GET'])
 def Impression(request):
     if request:
-       saveImpression(request['user-name'],request['sdk'],request['impression'])
+       saveImpression(request['user-name'],request['sdk'])
         
     elif not request:
         return Status.HTTP_400_BAD_REQUEST
