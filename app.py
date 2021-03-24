@@ -9,52 +9,36 @@ import redis
 app = Flask(__name__)
 cache = redis.Redis(host='redis', port=6379)
 
-def saveUserImps(userName,):
+
+def saveUserImps(userName):
     try:
-        if not cache.exists(userName):#impressions per user
-            cache.hset("impressions","user name",userName,1)
-        elif cache.exists(userName):
-            imps = cache.get(userName) +1
-            cache.hset("impressions","user name",userName,imps)
+        cache.hincrby('user:'+userName, 'impressions',1)
     except:
-        return
+        return "failed to save"
 def saveSdkImps(sdk):
     try:
-        if not cache.exists(sdk):#impressions per sdk version
-            cache.hset("impressions","SDK Version",sdk,1)
-
-        elif cache.exists(sdk):
-            imps = cache.get(sdk) + 1
-            cache.hset("impressions","SDK Version",sdk,imps)
+        cache.hincrby('sdk:'+sdk, 'impressions',1)
     except:
-        return
+         return "failed to save"
 def saveImpression(userName,sdk):
     
     saveUserImps(userName)
     saveSdkImps(sdk)
 
-def saveAdReqPerUser(userName,add):
+def saveAdReqPerUser(userName):
     try:
-        if not cache.exists(userName):#ad req per user
-            cache.hset("requests","advertisesment",add,"user name",userName,1)
-        elif cache.exists(userName):
-            reqs = cache.get(userName) +1
-            cache.hset("requests","advertisesment",add,"user name",userName,reqs)
+        cache.hincrby('user:'+userName, 'requests',1)
     except:
-        return
-def saveAdReqPerSdk(sdk,add):
+         return "failed to save"
+def saveAdReqPerSdk(sdk):
     try:
-        if not cache.exists(sdk):#ad req per sdk version
-            cache.hset("adds","advertisesment",add,"SDK Version",sdk,1)
+        cache.hincrby('sdk:'+sdk, 'requests',1)
+    except:
+         return "failed to save"
 
-        elif cache.exists(add):
-            reqs = cache.get(sdk) + 1
-            cache.hset("adds","advertisesment",add,"SDK Version",sdk,reqs)
-    except:
-        return
-def saveAdReqs(userName,sdk,add):
-    saveUserImps(userName,add)
-    saveSdkImps(sdk,add)    
+def saveAdReqs(userName,sdk):
+    saveUserImps(userName)
+    saveSdkImps(sdk)    
 
 '''
 GetAd
@@ -79,7 +63,6 @@ def GetAd(request):
     if request:
         r =requests.get('https://6u3td6zfza.execute-api.us-east-2.amazonaws.com/prod/ad/vast')# getting XML in a VAST format
         saveAdReqs(request['user-name'],request['sdk'])
-      
         return r
     elif not request:
         return 'wrong input in request or missing'
@@ -111,7 +94,38 @@ def Impression(request):
     
     return app.HTTPResponse(status=200, body="impression saved")
 
-
+def getUserImps(users):
+    try:
+        imps = 0
+        for user in users:
+            imps+=cache.get(user,"impressions").decode("utf-8")
+        return imps
+    except:
+        return -1
+def getSdkImps(sdks):
+    try:
+        imps = 0
+        for sdk in sdks:
+            imps+=cache.get(sdk,"impressions").decode("utf-8")
+        return imps
+    except:
+        return -1
+def getUserReqs(users):
+    try:
+        reqs = 0
+        for user in users:
+            reqs+=cache.get(user,"requests").decode("utf-8")
+        return reqs
+    except:
+        return -1
+def getSdkReqs(sdks):
+    try:
+        reqs = 0
+        for sdk in sdks:
+            reqs+=cache.get(sdk,"requests").decode("utf-8")
+        return reqs
+    except:
+        return -1
 ''' 
 GetStats
 Request
@@ -128,10 +142,21 @@ Returns the calculated values about as a JSON object
  '''
 @app.route('/get-stat', methods=['GET'])
 def GetStats(FilterType):
-    
-    imps = cache.hmget("impressions",FilterType)# impressions per filter (user/sdk version)   
-    addReqs = cache.hmget("requests",FilterType) # add requests per filter (use/ sdk version)
-    fillRate = imps // addReqs
-    return jsonify({'impressions':imps,'add-requests':addReqs,'fill-rate':fillRate})
-
+    try:
+        imps = 0
+        reqs = 0
+        fillRate = 0.0
+        if FilterType == 'user':
+            keys = cache.keys("*"+FilterType+"*").decode("utf-8")
+            imps = getUserImps(keys)
+            reqs = getUserReqs(keys)
+        elif FilterType == "SDK version":
+            keys = cache.keys("*sdk*").decode("utf-8")
+            imps = getSdkImps(keys)
+            reqs = getSdkReqs(keys)
+        
+        fillRate = imps // reqs
+        return jsonify({'impressions':imps,'add-requests':reqs,'fill-rate':fillRate})
+    except:
+        return "something went wrong"
 app.run()
