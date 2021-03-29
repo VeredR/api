@@ -30,6 +30,6 @@ def getUserImps(user):
 
 def getAllUsers():
     try:
-        return cache.keys("*user*").decode("utf-8")
+        return cache.keys("user:*").decode("utf-8")
     except:
         return {}
