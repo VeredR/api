@@ -1,19 +1,11 @@
-from logging import exception
-from flask.wrappers import JSONMixin
+#from logging import exception
+#from flask.wrappers import JSONMixin
 from flask import Flask, jsonify, request
 import requests
-from time import sleep
-#from api import app
 from api.models import user 
 from api.models import sdkModel 
 from api import errors
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
-
-
-#import os 
- 
 
 app = Flask(__name__)
 
@@ -36,18 +28,14 @@ def saveAdReqs(userName,sdk):
 
 def sendRequest():
     try:
-        url = 'https://6u3td6zfza.execute-us-east-2.amazonaws.com/prod/ad/vast'
-        session = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.5)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-
-        r = session.get(url)
-        return r.json()
-    except requests.exceptions.ConnectionError:
-        r.status_code == "Connection refused"
-        return False
+        url = "https://6u3td6zfza.execute-api.us-east-2.amazonaws.com/prod/ad/vast"
+        r = {}
+        r = requests.get(url)
+        
+        return r.content.decode('utf8')
+    except requests.exceptions.ConnectionError as e:
+        if not r: 
+            return errors.error_response(e.errno,e.strerror)  
    
 
 
@@ -72,21 +60,20 @@ Return the XML as it was returned from the external API
 '''
 @app.route('/get-ad', methods=['GET'])
 def GetAd():
-   
     try:
         if len(request.args) == 5 and 'sdk' in request.args and "user" in request.args: 
             req = sendRequest()
             if req:# XML in a VAST format in a json format
                 if saveAdReqs(request.args['user'],request.args['sdk']):
-                    return app.HTTPResponse(status=200,body = r)
+                    return app.make_response(rv = req)
             elif not req:
-                return errors.error_response(412)
+                return errors.error_response(412,"No VAST Retrived")
         elif len(request.args) != 5 or not "user"  in request.args or not "sdk" in request.args:
             return errors.bad_request("wrong input in request or missing")
 
     except Exception as e:
         
-        return errors.bad_request(e)#app.HTTPResponse(status=400, body="could not save ad-request or get the add")
+        return errors.bad_request(str(e))
         
         
     
@@ -103,7 +90,7 @@ Save/increment in an external database/key-value store how many Impressions per 
 Save/increment in an external database/key-value store how many Impressions per SDK version
 As a response returns HTTP 200
 '''   
-@app.route('/impression', methods=['POST'],)
+@app.route('/impression', methods=['POST'])
 def impression():
     if  len(request.args) == 5 and "sdk" in request.args and "user" in request.args:
         if saveImpression(request.args['user'],request.args['sdk']): 
@@ -138,35 +125,32 @@ Returns the calculated values about as a JSON object
 def GetStats():
     try:
         
-        ans = {}
         if "filterType" in request.args:
             if request.args["filterType"] == 'user':
                users = user.getAllUsers()
-               if users:
+               if users != -1:
                     for useri in users:
-                        ans[useri[5:]] ={}
-                        imps = user.getUserImps(useri)
-                        ans[useri[5:]].append('impressions',imps)
-                        reqs = user.getUserReqs(useri)
-                        ans[useri[5:]].append('add-requests',reqs)
+                        imps = useri["impressions"]
+                        reqs = useri["ad-requests"]
                         fillRate = imps // reqs
-                        ans[useri[5:]].append('fill-rate',fillRate)
-               elif not users:
+                        useri['fill-rate']= fillRate
+                    return app.make_response(rv=users)
+               elif users == -1:
                     return errors.error_response(412,"no users to calculate")
                     
             elif request.args["filterType"] == "sdk":
                 sdks = sdkModel.getAllSdks()
-                if sdks:
-                    for sdki in sdks:
-                        
-                        imps = sdkModel.getSdkImps(sdki)
-                        reqs = sdkModel.getSdkReqs(sdki)
+                if sdks != -1:
+                    for sdk in sdks:
+                        imps = sdk["impressions"]
+                        reqs = sdk["ad-requests"]
                         fillRate = imps // reqs
-                        ans[sdki] = {'impressions':imps,'add-requests':reqs,'fill-rate':fillRate}
-                elif not sdks:
+                        sdk.append('fill-rate',fillRate)
+                    return app.make_response(rv=jsonify(sdks))
+                elif sdks == -1:
                     errors.error_response(412,"no sdks to calculate")
                 
-            return app.make_response(rv=jsonify(ans))
+            
     except Exception as e:
         return errors.error_response(e)
 
