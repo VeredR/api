@@ -1,10 +1,11 @@
 # api
 Docker REST API written in Python with Flask and Redis modules 
 
-Design:
+# Design:
 
 dao - represents the data access object, in our case the redis cache
-models: for each entity(user, sdkModel) with the same functions inside the code to establish seperation.
+models: 
+for each entity(user, sdkModel) with the same functions inside the code to establish seperation.
 
 controller called app, gets all the http requests:
 
@@ -13,7 +14,7 @@ controller called app, gets all the http requests:
 3. the third function is a get request because we retrive the impressions, requests and fill rate for each user/sdk version
 
 
-Three functions:
+# Three functions:
 
 1. get-add: 
 gets an XML of VAST format, and saving the add request per user and sdk version.
@@ -40,7 +41,7 @@ http://localhost:5000/get-stat?filterType=[FILTER_TYPE]
 
 where [FILTER_TYPE] is the string you should enter to get either users or sdks data
 
-General Settings:
+# General Settings:
 1. Flask port is 5000 (default)
 2. Redis port is 6379 (default)
 
