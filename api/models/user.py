@@ -1,8 +1,8 @@
 import redis
 from api import errors
+from . import dao
 
-cache = redis.Redis(host='localhost', port=6379)
-
+cache = dao.getCache()
 
 def saveUserImps(user):
     try:
@@ -42,16 +42,20 @@ def getAllUsers():
     try:
         users = {}
         for useri in cache.scan_iter("user*"):
-            user = {}
-            useri = useri.decode('utf-8')
-            imps = getUserImps(useri)
-            reqs = getUserReqs(useri)
-            key = useri[5:]
-            user = {key:{"user-name":key,"impressions":imps,"ad-requests":reqs}}
-            users.update(user)
+            if useri:
+                user = {}
+                useri = useri.decode('utf-8')
+                imps = getUserImps(useri)
+                reqs = getUserReqs(useri)
+                key = useri[5:]
+                user = {key:{"user-name":key,"impressions":imps,"ad-requests":reqs}}
+                users.update(user)
+            elif useri is None:
+                break
         if users:
             return users
         elif not users:
             return -1
     except Exception as e:
+        
         return errors.error_response(412,e) 
