@@ -33,5 +33,3 @@ General Settings:
 1. Flask port is 5000 (default)
 2. Redis port is 6379 (default)
 
-
-
