@@ -12,7 +12,7 @@ http://localhost:5000/get-ad?user=<USER_NAME>&sdk=<SDK_VERSION>&country-code=<CO
 
 where <SOMETHING> is the string / number you should enter to check
 
-2.impression: 
+2. impression: 
 saving impression and on success returning 200 
 
 the url to check if it works should look like this: (this is not a secure env, since it runs localy)
@@ -29,9 +29,9 @@ http://localhost:5000/get-stat?filterType=<FILTER_TYPE>
 
 where <FILTER_TYPE> is the string you should enter to get either users or sdks
 
-General Settings
-Flask port is 5000 (default)
-Redis port is 6379 (default)
+General Settings:
+1. Flask port is 5000 (default)
+2. Redis port is 6379 (default)
 
 
 
