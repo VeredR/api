@@ -8,26 +8,26 @@ Three functions:
 gets an XML of VAST format, and saving the add request per user and sdk version.
 
 the url to check if it works should look like this: (this is not a secure env, since it runs localy)
-http://localhost:5000/get-ad?user=<USER_NAME>&sdk=<SDK_VERSION>&country-code=<COUNTRY_CODE>&seesionId=<SESSION_ID>&platform=<PLATFORM>
+http://localhost:5000/get-ad?user=[USER_NAME]&sdk=[SDK_VERSION]&country-code=[COUNTRY_CODE]&seesionId=[SESSION_ID]&platform=[PLATFORM]
 
-where <SOMETHING> is the string / number you should enter to check
+where [SOMETHING] is the string / number you should enter to check
 
 2. impression: 
 saving impression and on success returning 200 
 
 the url to check if it works should look like this: (this is not a secure env, since it runs localy)
-http://localhost:5000/impression?user=<USER_NAME>&sdk=<SDK_VERSION>&country-code=<COUNTRY_CODE>&seesionId=<SESSION_ID>&platform=<PLATFORM>
+http://localhost:5000/impression?user=[USER_NAME]&sdk=[SDK_VERSION]&country-code=[COUNTRY_CODE]&seesionId=[SESSION_ID]&platform=[PLATFORM]
 
-where <SOMETHING> is the string / number you should enter to check
+where [SOMETHING] is the string / number you should enter to check
 
 3. get-stat: 
 getting a json per user/sdk of the user name/ sdk version (depending on the filterType) 
 and the number of impressions, ad requests, and fill rate (impressions/requests) per user name/sdk version.
 
 the url to check if it works should look like this: (this is not a secure env, since it runs localy)
-http://localhost:5000/get-stat?filterType=<FILTER_TYPE>
+http://localhost:5000/get-stat?filterType=[FILTER_TYPE]
 
-where <FILTER_TYPE> is the string you should enter to get either users or sdks
+where [FILTER_TYPE] is the string you should enter to get either users or sdks data
 
 General Settings:
 1. Flask port is 5000 (default)
