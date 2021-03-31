@@ -1,5 +1,4 @@
-#from logging import exception
-#from flask.wrappers import JSONMixin
+
 from flask import Flask, jsonify, request
 import requests
 from api.models import user 
@@ -14,8 +13,8 @@ def saveImpression(userName,sdk):
         user.saveUserImps(userName)
         sdkModel.saveSdkImps(sdk)
         return True
-    except:
-         return False
+    except Exception as e:
+        return errors.error_response(e) 
 
 
 def saveAdReqs(userName,sdk):
@@ -23,8 +22,9 @@ def saveAdReqs(userName,sdk):
         user.saveUserReqs(userName)
         sdkModel.saveSdkReqs(sdk)
         return True
-    except:
-         return False    
+    except Exception as e:
+        return errors.error_response(e) 
+              
 
 def sendRequest():
     try:
@@ -67,7 +67,7 @@ def GetAd():
                 if saveAdReqs(request.args['user'],request.args['sdk']):
                     return app.make_response(rv = req)
             elif not req:
-                return errors.error_response(412,"No VAST Retrived")
+                return errors.error_response(412,"No XML VAST Retrived")
         elif len(request.args) != 5 or not "user"  in request.args or not "sdk" in request.args:
             return errors.bad_request("wrong input in request or missing")
 
@@ -94,7 +94,7 @@ As a response returns HTTP 200
 def impression():
     if  len(request.args) == 5 and "sdk" in request.args and "user" in request.args:
         if saveImpression(request.args['user'],request.args['sdk']): 
-            return app.make_response(rv="impression saved") 
+            return app.make_response(rv="impression saved "+request.args['sdk']) 
         else:
             return errors.bad_request("could not save impression")
     elif len(request.args) != 5 or not "sdk" in request.args or not "user" in request.args:
@@ -124,35 +124,40 @@ Returns the calculated values about as a JSON object
 @app.route('/get-stat', methods=['GET'])
 def GetStats():
     try:
-        
         if "filterType" in request.args:
             if request.args["filterType"] == 'user':
                users = user.getAllUsers()
                if users != -1:
-                    for useri in users:
-                        imps = useri["impressions"]
-                        reqs = useri["ad-requests"]
-                        fillRate = imps // reqs
-                        useri['fill-rate']= fillRate
-                    return app.make_response(rv=users)
+                    for i in users:
+                        imps = users[i]["impressions"]
+                        reqs = users[i]["ad-requests"]
+                        if int(reqs) != 0:
+                            fillRate = imps // reqs
+                            users[i].update({"fill-rate":fillRate})
+                        elif int(reqs) == 0:
+                            users.pop(i)
+                    return app.make_response(rv=jsonify(users))
                elif users == -1:
                     return errors.error_response(412,"no users to calculate")
                     
             elif request.args["filterType"] == "sdk":
                 sdks = sdkModel.getAllSdks()
-                if sdks != -1:
-                    for sdk in sdks:
-                        imps = sdk["impressions"]
-                        reqs = sdk["ad-requests"]
-                        fillRate = imps // reqs
-                        sdk.append('fill-rate',fillRate)
+                if sdks:
+                    for i in sdks:
+                        imps = sdks[i]["impressions"]
+                        reqs = sdks[i]["ad-requests"]
+                        if int(reqs) != 0:
+                            fillRate = int(imps) // int(reqs)
+                            sdks[i].update({"fill-rate":fillRate})
+                        elif int(reqs) == 0:
+                            sdks.pop(i)
                     return app.make_response(rv=jsonify(sdks))
                 elif sdks == -1:
                     errors.error_response(412,"no sdks to calculate")
                 
             
     except Exception as e:
-        return errors.error_response(e)
+        return errors.error_response(412,e)
 
 
 app.run()
