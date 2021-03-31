@@ -1,7 +1,10 @@
-from api.errors import error_response
+
 import redis
 from api import errors
-cache = redis.Redis(host='localhost', port=6379)
+from . import dao
+
+cache = dao.getCache()
+
 
 def saveSdkImps(sdk):
     try:

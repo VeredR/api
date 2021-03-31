@@ -1,9 +1,11 @@
 
 from flask import Flask, jsonify, request
 import requests
-from api.models import user 
-from api.models import sdkModel 
-from api import errors
+import api.models.user as user
+import api.models.sdkModel as sdkModel
+import api.errors as errors
+
+
 
 
 app = Flask(__name__)
@@ -94,7 +96,7 @@ As a response returns HTTP 200
 def impression():
     if  len(request.args) == 5 and "sdk" in request.args and "user" in request.args:
         if saveImpression(request.args['user'],request.args['sdk']): 
-            return app.make_response(rv="impression saved "+request.args['sdk']) 
+            return app.make_response(rv = jsonify(200)) 
         else:
             return errors.bad_request("could not save impression")
     elif len(request.args) != 5 or not "sdk" in request.args or not "user" in request.args:
@@ -132,13 +134,13 @@ def GetStats():
                         imps = users[i]["impressions"]
                         reqs = users[i]["ad-requests"]
                         if int(reqs) != 0:
-                            fillRate = imps // reqs
-                            users[i].update({"fill-rate":fillRate})
+                            fillRate = imps / reqs
+                            users[i].update({"fill-rate":float(fillRate)})
                         elif int(reqs) == 0:
                             users.pop(i)
                     return app.make_response(rv=jsonify(users))
                elif users == -1:
-                    return errors.error_response(412,"no users to calculate")
+                   return errors.error_response(412,"no users to calculate")
                     
             elif request.args["filterType"] == "sdk":
                 sdks = sdkModel.getAllSdks()
@@ -147,8 +149,8 @@ def GetStats():
                         imps = sdks[i]["impressions"]
                         reqs = sdks[i]["ad-requests"]
                         if int(reqs) != 0:
-                            fillRate = int(imps) // int(reqs)
-                            sdks[i].update({"fill-rate":fillRate})
+                            fillRate = int(imps) / int(reqs)
+                            sdks[i].update({"fill-rate":float(fillRate)})
                         elif int(reqs) == 0:
                             sdks.pop(i)
                     return app.make_response(rv=jsonify(sdks))
@@ -159,5 +161,5 @@ def GetStats():
     except Exception as e:
         return errors.error_response(412,e)
 
-
-app.run()
+if __name__ == "__main__":
+    app.run()
