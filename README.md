@@ -9,7 +9,7 @@ models: for each entity(user, sdkModel) with the same functions inside the code 
 controller called app, gets all the http requests:
 
 1. the first function is a get request (retrieves the vast format xml)
-2. the second function is a post request(because it sends impression data and saves it, not retrieving data but http 200 response)
+2. the second function is a post request (because it sends impression data and saves it, not retrieving data but http 200 response)
 3. the third function is a get request because we retrive the impressions, requests and fill rate for each user/sdk version
 
 
