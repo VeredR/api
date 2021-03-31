@@ -1,5 +1,5 @@
 # api
-Docker REST API with Flask and Redis Python 
+Docker REST API written in Python with Flask and Redis modules 
 
 Desigen:
 dao - represents the data access object, in our case the redis cache
