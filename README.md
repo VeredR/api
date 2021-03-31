@@ -1,4 +1,4 @@
-# app
+# api
 Docker REST API with Flask and Redis Python 
 
 
