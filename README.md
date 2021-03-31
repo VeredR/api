@@ -29,5 +29,9 @@ http://localhost:5000/get-stat?filterType=<FILTER_TYPE>
 
 where <FILTER_TYPE> is the string you should enter to get either users or sdks
 
+General Settings
+Flask port is 5000 (default)
+Redis port is 6379 (default)
+
 
 
