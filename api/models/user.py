@@ -1,6 +1,5 @@
 import redis
 from api import errors
-
 from . import dao
 
 cache = dao.getCache()
